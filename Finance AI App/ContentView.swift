@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LocalAuthentication
 
 struct ContentView: View {
     @StateObject private var store = TransactionStore()
@@ -13,10 +14,43 @@ struct ContentView: View {
     @StateObject private var userStore = UserStore()
     @StateObject private var achievementsStore = AchievementsStore()
     @State private var showBeginnerPrompt = false
+    @State private var isAuthenticated = false
+    @State private var showingAuthAlert = false
     
     var body: some View {
         Group {
-            if userStore.isAuthenticated {
+            if !isAuthenticated {
+                // Authentication screen
+                VStack(spacing: 30) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                    
+                    Text("Finance AI App")
+                        .font(.largeTitle.bold())
+                    
+                    Text("Secure your financial data")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Button(action: authenticateUser) {
+                        HStack {
+                            Image(systemName: "faceid")
+                            Text("Authenticate to Continue")
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 40)
+                }
+                .onAppear {
+                    authenticateUser()
+                }
+            } else if userStore.isAuthenticated {
                 ZStack {
                     MainTabView(store: store, stockStore: stockStore, userStore: userStore, achievementsStore: achievementsStore)
                         .onAppear {
@@ -32,6 +66,29 @@ struct ContentView: View {
             } else {
                 SignUpView(userStore: userStore)
             }
+        }
+        .alert("Authentication Required", isPresented: $showingAuthAlert) {
+            Button("Try Again") {
+                authenticateUser()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Please authenticate to access your financial data.")
+        }
+    }
+    
+    private func authenticateUser() {
+        if SecurityManager.shared.isBiometricAvailable() {
+            SecurityManager.shared.authenticateWithBiometrics { success in
+                if success {
+                    isAuthenticated = true
+                } else {
+                    showingAuthAlert = true
+                }
+            }
+        } else {
+            // Fallback for devices without biometrics
+            isAuthenticated = true
         }
     }
 }

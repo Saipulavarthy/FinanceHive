@@ -11,6 +11,7 @@ struct DashboardView: View {
     @State private var showingAddTransactionSheet = false
     @State private var newTransactionType: Transaction.TransactionType = .expense
     @State private var showingAddExpenseSheet = false
+    @State private var showingScanReceiptSheet = false
     
     enum TimeFrame: String, CaseIterable {
         case week = "Week"
@@ -87,6 +88,20 @@ struct DashboardView: View {
                             .background(Color.green)
                             .cornerRadius(12)
                     }
+                }
+                .padding(.horizontal)
+                
+                // Scan Receipt Button
+                Button(action: {
+                    showingScanReceiptSheet = true
+                }) {
+                    Label("Scan Receipt", systemImage: "camera.fill")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .leading, endPoint: .trailing))
+                        .cornerRadius(12)
                 }
                 .padding(.horizontal)
                 
@@ -205,6 +220,9 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingAddExpenseSheet) {
             NewExpenseView(isPresented: $showingAddExpenseSheet)
+        }
+        .sheet(isPresented: $showingScanReceiptSheet) {
+            ScanReceiptView()
         }
     }
 }

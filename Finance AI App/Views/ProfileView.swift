@@ -46,6 +46,51 @@ struct ProfileView: View {
                         .toggleStyle(SwitchToggleStyle(tint: .purple))
                     }
                     
+                    Section(header: Label("Security", systemImage: "lock.shield").foregroundColor(.red)) {
+                        HStack {
+                            Image(systemName: "faceid")
+                            Text("Biometric Authentication")
+                            Spacer()
+                            if SecurityManager.shared.isBiometricAvailable() {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            } else {
+                                Text("Not Available")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Button(action: {
+                            // Export data securely
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Export Data")
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        
+                        Button(action: {
+                            // Import data securely
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Import Data")
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        
+                        Button(action: {
+                            // Show secure deletion confirmation
+                        }) {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Delete All Data")
+                            }
+                            .foregroundColor(.red)
+                        }
+                    }
+                    
                     Section(header: Label("Profile", systemImage: "person.crop.circle").foregroundColor(.blue)) {
                         Button(action: { showEdit = true }) {
                             HStack {

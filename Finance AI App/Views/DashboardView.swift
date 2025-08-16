@@ -10,8 +10,9 @@ struct DashboardView: View {
     @State private var showingBudgetSheet = false
     @State private var showingAddTransactionSheet = false
     @State private var newTransactionType: Transaction.TransactionType = .expense
-    @State private var showingAddExpenseSheet = false
-    @State private var showingScanReceiptSheet = false
+                    @State private var showingAddExpenseSheet = false
+                @State private var showingScanReceiptSheet = false
+                @State private var showingVoiceExpenseSheet = false
     
     enum TimeFrame: String, CaseIterable {
         case week = "Week"
@@ -91,17 +92,33 @@ struct DashboardView: View {
                 }
                 .padding(.horizontal)
                 
-                // Scan Receipt Button
-                Button(action: {
-                    showingScanReceiptSheet = true
-                }) {
-                    Label("Scan Receipt", systemImage: "camera.fill")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .leading, endPoint: .trailing))
-                        .cornerRadius(12)
+                // Additional Action Buttons
+                HStack(spacing: 20) {
+                    // Scan Receipt Button
+                    Button(action: {
+                        showingScanReceiptSheet = true
+                    }) {
+                        Label("Scan Receipt", systemImage: "camera.fill")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .leading, endPoint: .trailing))
+                            .cornerRadius(12)
+                    }
+                    
+                    // Voice Expense Button
+                    Button(action: {
+                        showingVoiceExpenseSheet = true
+                    }) {
+                        Label("Voice Entry", systemImage: "mic.fill")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(LinearGradient(gradient: Gradient(colors: [Color.orange, Color.red]), startPoint: .leading, endPoint: .trailing))
+                            .cornerRadius(12)
+                    }
                 }
                 .padding(.horizontal)
                 
@@ -223,6 +240,9 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingScanReceiptSheet) {
             ScanReceiptView()
+        }
+        .sheet(isPresented: $showingVoiceExpenseSheet) {
+            VoiceExpenseView(isPresented: $showingVoiceExpenseSheet)
         }
     }
 }

@@ -102,35 +102,98 @@ struct MessageBubble: View {
     let message: Message
     
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            if !message.isUser {
-                Image(systemName: "dollarsign.circle.fill")
-                    .foregroundColor(.blue)
-                    .font(.title2)
+        VStack(spacing: 4) {
+            HStack(alignment: .top, spacing: 8) {
+                if !message.isUser {
+                    // Bot Avatar
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 32, height: 32)
+                        
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                if message.isUser { Spacer() }
+                
+                VStack(alignment: message.isUser ? .trailing : .leading, spacing: 4) {
+                    // Message content
+                    Text(message.content)
+                        .font(.body)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            message.isUser ?
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ) :
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color(.systemGray6)]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .foregroundColor(message.isUser ? .white : .primary)
+                        .clipShape(ChatBubbleShape(isUser: message.isUser))
+                    
+                    // Timestamp and sender
+                    HStack(spacing: 4) {
+                        if !message.isUser {
+                            Text(message.sender.displayName)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                        }
+                        
+                        Text(formatTimestamp(message.timestamp))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, message.isUser ? 8 : 0)
+                }
+                
+                if !message.isUser { Spacer() }
             }
-            
-            if message.isUser { Spacer() }
-            
-            Text(message.content)
-                .padding()
-                .background(
-                    message.isUser ?
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ) :
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(.systemBackground).opacity(0.9)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .foregroundColor(message.isUser ? .white : .primary)
-                .cornerRadius(16)
-            
-            if !message.isUser { Spacer() }
         }
+    }
+    
+    private func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        if calendar.isDateInToday(date) {
+            formatter.timeStyle = .short
+            return formatter.string(from: date)
+        } else if calendar.isDateInYesterday(date) {
+            return "Yesterday"
+        } else {
+            formatter.dateStyle = .short
+            return formatter.string(from: date)
+        }
+    }
+}
+
+struct ChatBubbleShape: Shape {
+    let isUser: Bool
+    
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: isUser ? 
+                [.topLeft, .topRight, .bottomLeft] : 
+                [.topLeft, .topRight, .bottomRight],
+            cornerRadii: CGSize(width: 18, height: 18)
+        )
+        return Path(path.cgPath)
     }
 }
 

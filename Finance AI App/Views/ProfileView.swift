@@ -91,6 +91,17 @@ struct ProfileView: View {
                         }
                     }
                     
+                    Section(header: Label("Siri & Voice", systemImage: "mic.circle").foregroundColor(.orange)) {
+                        NavigationLink(destination: SiriShortcutsView()) {
+                            HStack {
+                                Image(systemName: "waveform")
+                                Text("Siri Shortcuts")
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundColor(.orange)
+                        }
+                    }
+                    
                     Section(header: Label("Profile", systemImage: "person.crop.circle").foregroundColor(.blue)) {
                         Button(action: { showEdit = true }) {
                             HStack {

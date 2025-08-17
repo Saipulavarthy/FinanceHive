@@ -9,9 +9,11 @@ class UserStore: ObservableObject {
     
     private let userDefaultsKey = "currentUser"
     private let credentialsKey = "userCredentials"
+    private var salaryCheckTimer: Timer?
     
     init() {
         loadUser()
+        startSalaryCheckTimer()
     }
     
     func signUp(name: String, email: String, password: String) -> Bool {
@@ -53,6 +55,7 @@ class UserStore: ObservableObject {
         currentUser = nil
         isAuthenticated = false
     }
+
     
     private func saveUser() {
         if let encoded = try? JSONEncoder().encode(currentUser) {
@@ -97,4 +100,133 @@ class UserStore: ObservableObject {
         currentUser = user
         saveUser()
     }
+    
+    // MARK: - Salary Schedule Management
+    
+    func setSalarySchedule(_ schedule: SalarySchedule) {
+        guard var user = currentUser else { return }
+        user.salarySchedule = schedule
+        currentUser = user
+        saveUser()
+    }
+    
+    func updateSalarySchedule(amount: Double? = nil, frequency: PayFrequency? = nil, nextPayDate: Date? = nil, isActive: Bool? = nil) {
+        guard var user = currentUser, var schedule = user.salarySchedule else { return }
+        
+        if let amount = amount { schedule.amount = amount }
+        if let frequency = frequency { schedule.frequency = frequency }
+        if let nextPayDate = nextPayDate { schedule.nextPayDate = nextPayDate }
+        if let isActive = isActive { schedule.isActive = isActive }
+        
+        user.salarySchedule = schedule
+        currentUser = user
+        saveUser()
+    }
+    
+    func removeSalarySchedule() {
+        guard var user = currentUser else { return }
+        user.salarySchedule = nil
+        currentUser = user
+        saveUser()
+    }
+    
+    // MARK: - FinBot Settings Management
+    
+    func updateFinBotSettings(_ settings: FinBotSettings) {
+        guard var user = currentUser else { return }
+        var updatedSettings = settings
+        updatedSettings.updatedAt = Date()
+        user.finBotSettings = updatedSettings
+        currentUser = user
+        saveUser()
+    }
+    
+    func updateFinBotMood(_ mood: FinBotMood) {
+        guard var user = currentUser else { return }
+        user.finBotSettings.mood = mood
+        user.finBotSettings.updatedAt = Date()
+        currentUser = user
+        saveUser()
+    }
+    
+    func updateFinBotVoice(_ voice: FinBotVoice) {
+        guard var user = currentUser else { return }
+        user.finBotSettings.voice = voice
+        user.finBotSettings.updatedAt = Date()
+        currentUser = user
+        saveUser()
+    }
+    
+    func updateFinBotTheme(_ theme: FinBotTheme) {
+        guard var user = currentUser else { return }
+        user.finBotSettings.theme = theme
+        user.finBotSettings.updatedAt = Date()
+        currentUser = user
+        saveUser()
+    }
+    
+    func updateFinBotName(_ name: String) {
+        guard var user = currentUser else { return }
+        user.finBotSettings.customName = name
+        user.finBotSettings.updatedAt = Date()
+        currentUser = user
+        saveUser()
+    }
+    
+    // MARK: - Automatic Salary Crediting
+    
+    private func startSalaryCheckTimer() {
+        // Check for salary crediting every hour
+        salaryCheckTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkAndCreditSalary()
+            }
+        }
+        
+        // Check immediately on app launch
+        checkAndCreditSalary()
+    }
+    
+    func checkAndCreditSalary() {
+        guard var user = currentUser,
+              var schedule = user.salarySchedule,
+              schedule.shouldCreditToday() else {
+            return
+        }
+        
+        // Credit the salary
+        creditSalary(amount: schedule.amount)
+        
+        // Update schedule for next pay date
+        schedule.lastCreditedDate = Date()
+        schedule.updateNextPayDate()
+        user.salarySchedule = schedule
+        currentUser = user
+        saveUser()
+        
+        // Post notification for successful crediting
+        NotificationCenter.default.post(name: .salaryWasCredited, object: nil, userInfo: [
+            "amount": schedule.amount,
+            "nextPayDate": schedule.nextPayDate
+        ])
+    }
+    
+    private func creditSalary(amount: Double) {
+        // This will integrate with TransactionStore to add income
+        NotificationCenter.default.post(name: .addAutomaticIncome, object: nil, userInfo: [
+            "amount": amount,
+            "description": "Automatic Salary Credit",
+            "date": Date()
+        ])
+    }
+    
+    deinit {
+        salaryCheckTimer?.invalidate()
+    }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let salaryWasCredited = Notification.Name("salaryWasCredited")
+    static let addAutomaticIncome = Notification.Name("addAutomaticIncome")
 } 

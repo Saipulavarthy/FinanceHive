@@ -6,15 +6,26 @@ class AssistantStore: ObservableObject {
     @Published var isTyping = false
     private let transactionStore: TransactionStore
     private let stockStore: StockStore
+    private let userStore: UserStore
     
-    init(transactionStore: TransactionStore, stockStore: StockStore) {
+    // AI-powered financial advisors
+    @Published var budgetAdjuster: BudgetAdjuster
+    @Published var reminderManager: SmartReminderManager
+    
+    init(transactionStore: TransactionStore, stockStore: StockStore, userStore: UserStore) {
         self.transactionStore = transactionStore
         self.stockStore = stockStore
+        self.userStore = userStore
+        self.budgetAdjuster = BudgetAdjuster(transactionStore: transactionStore, userStore: userStore)
+        self.reminderManager = SmartReminderManager(transactionStore: transactionStore, userStore: userStore)
         addWelcomeMessage()
+        startProactiveMessaging()
     }
     
     private func addWelcomeMessage() {
-        messages.append(.assistant("👋 Hi! I'm FinBot, your AI stock market assistant. Ask me about stock trends, predictions, or market insights!"))
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
+        let welcomeMessage = finBotSettings.getGreeting()
+        messages.append(.assistant(welcomeMessage))
     }
     
     func sendMessage(_ content: String) {
@@ -63,6 +74,7 @@ class AssistantStore: ObservableObject {
     }
     
     private func buildContextualPrompt(for query: String) -> String {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
         let totalIncome = transactionStore.totalIncome
         let totalExpenses = transactionStore.totalExpenses
         let balance = totalIncome - totalExpenses
@@ -70,6 +82,8 @@ class AssistantStore: ObservableObject {
         let transactionCount = transactionStore.transactions.count
         
         return """
+        \(finBotSettings.personalityPrompt())
+        
         User's Financial Context:
         - Total Income: $\(String(format: "%.2f", totalIncome))
         - Total Expenses: $\(String(format: "%.2f", totalExpenses))
@@ -79,12 +93,183 @@ class AssistantStore: ObservableObject {
         
         User Question: \(query)
         
-        Please provide personalized financial advice based on this data.
+        Respond in your assigned personality while providing personalized financial advice based on this data.
         """
+    }
+    
+    // MARK: - Proactive AI Messaging
+    
+    private func startProactiveMessaging() {
+        // Check for proactive messages every 2 hours
+        Timer.scheduledTimer(withTimeInterval: 7200, repeats: true) { _ in
+            Task { @MainActor in
+                await self.checkForProactiveMessages()
+            }
+        }
+        
+        // Initial check after 30 seconds
+        Task {
+            try? await Task.sleep(nanoseconds: 30_000_000_000)
+            await checkForProactiveMessages()
+        }
+    }
+    
+    private func checkForProactiveMessages() async {
+        // Check for budget adjustments
+        if !budgetAdjuster.pendingAdjustments.isEmpty {
+            await sendBudgetAdjustmentMessage()
+        }
+        
+        // Check for due reminders
+        let dueReminders = reminderManager.overDueReminders
+        if !dueReminders.isEmpty {
+            await sendReminderMessage(for: dueReminders)
+        }
+        
+        // Check for upcoming reminders
+        let upcomingReminders = reminderManager.upcomingReminders
+        if !upcomingReminders.isEmpty && shouldSendUpcomingReminders() {
+            await sendUpcomingReminderMessage(for: upcomingReminders)
+        }
+    }
+    
+    private func sendBudgetAdjustmentMessage() async {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
+        let adjustments = budgetAdjuster.pendingAdjustments.prefix(3) // Show top 3
+        
+        var message = ""
+        
+        switch finBotSettings.mood {
+        case .professional:
+            message = "I've analyzed your spending patterns and identified \(adjustments.count) budget optimization opportunities. "
+        case .friendly:
+            message = finBotSettings.useEmojis ? 
+                "Hey! 💡 I noticed some ways we could improve your budget. " :
+                "Hey! I noticed some ways we could improve your budget. "
+        case .enthusiastic:
+            message = finBotSettings.useEmojis ?
+                "🎉 Great news! I found some smart budget adjustments that could help you save money! " :
+                "Great news! I found some smart budget adjustments that could help you save money! "
+        case .supportive:
+            message = finBotSettings.useEmojis ?
+                "🤗 I'm here to help optimize your budget. I found some gentle adjustments that might work well for you. " :
+                "I'm here to help optimize your budget. I found some gentle adjustments that might work well for you. "
+        case .witty:
+            message = finBotSettings.useEmojis ?
+                "🧠 Your budget could use a little AI magic! I've spotted some opportunities to make your money work smarter. " :
+                "Your budget could use a little AI magic! I've spotted some opportunities to make your money work smarter. "
+        case .motivational:
+            message = finBotSettings.useEmojis ?
+                "💪 Let's level up your financial game! I found some powerful budget optimizations. " :
+                "Let's level up your financial game! I found some powerful budget optimizations. "
+        }
+        
+        for adjustment in adjustments {
+            let changeAmount = abs(adjustment.adjustmentAmount)
+            let direction = adjustment.isIncrease ? "increase" : "decrease"
+            message += "\n\n• \(adjustment.category.rawValue): \(direction) by $\(String(format: "%.0f", changeAmount)) - \(adjustment.reason.rawValue)"
+        }
+        
+        message += "\n\nWould you like me to explain these suggestions in detail?"
+        
+        messages.append(.assistant(message))
+    }
+    
+    private func sendReminderMessage(for reminders: [SmartReminder]) async {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
+        let topReminders = reminders.prefix(3)
+        
+        var message = ""
+        
+        switch finBotSettings.mood {
+        case .professional:
+            message = "You have \(topReminders.count) overdue financial obligations requiring attention:"
+        case .friendly:
+            message = finBotSettings.useEmojis ?
+                "Hey! 📅 Just a friendly reminder - you have some items that need attention:" :
+                "Hey! Just a friendly reminder - you have some items that need attention:"
+        case .enthusiastic:
+            message = finBotSettings.useEmojis ?
+                "⏰ Time to tackle some financial tasks! You've got this!" :
+                "Time to tackle some financial tasks! You've got this!"
+        case .supportive:
+            message = finBotSettings.useEmojis ?
+                "🤗 No worries - I'm here to help you stay on top of these items:" :
+                "No worries - I'm here to help you stay on top of these items:"
+        case .witty:
+            message = finBotSettings.useEmojis ?
+                "🎯 Your future self will thank you for handling these now!" :
+                "Your future self will thank you for handling these now!"
+        case .motivational:
+            message = finBotSettings.useEmojis ?
+                "💪 Let's crush these financial tasks together!" :
+                "Let's crush these financial tasks together!"
+        }
+        
+        for reminder in topReminders {
+            let daysPast = abs(reminder.daysUntilDue)
+            message += "\n\n• \(reminder.title)"
+            if let amount = reminder.amount {
+                message += " (\(reminder.formattedAmount))"
+            }
+            message += " - \(daysPast) days overdue"
+        }
+        
+        message += "\n\nShould I help you create a plan to catch up?"
+        
+        messages.append(.assistant(message))
+    }
+    
+    private func sendUpcomingReminderMessage(for reminders: [SmartReminder]) async {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
+        let nextReminder = reminders.first!
+        
+        var message = ""
+        
+        switch finBotSettings.mood {
+        case .professional:
+            message = "Upcoming financial obligation: \(nextReminder.title)"
+        case .friendly:
+            message = finBotSettings.useEmojis ?
+                "📅 Quick heads up! \(nextReminder.title) is coming up in \(nextReminder.daysUntilDue) days." :
+                "Quick heads up! \(nextReminder.title) is coming up in \(nextReminder.daysUntilDue) days."
+        case .enthusiastic:
+            message = finBotSettings.useEmojis ?
+                "🗓️ Exciting planning time! \(nextReminder.title) is due in \(nextReminder.daysUntilDue) days!" :
+                "Planning time! \(nextReminder.title) is due in \(nextReminder.daysUntilDue) days!"
+        case .supportive:
+            message = finBotSettings.useEmojis ?
+                "🤗 Just a gentle reminder: \(nextReminder.title) is due in \(nextReminder.daysUntilDue) days. You've got this!" :
+                "Just a gentle reminder: \(nextReminder.title) is due in \(nextReminder.daysUntilDue) days. You've got this!"
+        case .witty:
+            message = finBotSettings.useEmojis ?
+                "🧠 Time to be proactive! \(nextReminder.title) is sneaking up in \(nextReminder.daysUntilDue) days." :
+                "Time to be proactive! \(nextReminder.title) is sneaking up in \(nextReminder.daysUntilDue) days."
+        case .motivational:
+            message = finBotSettings.useEmojis ?
+                "💪 Stay ahead of the game! \(nextReminder.title) is in \(nextReminder.daysUntilDue) days - you're crushing your financial management!" :
+                "Stay ahead of the game! \(nextReminder.title) is in \(nextReminder.daysUntilDue) days - you're crushing your financial management!"
+        }
+        
+        if let amount = nextReminder.amount {
+            message += " Amount: \(nextReminder.formattedAmount)."
+        }
+        
+        messages.append(.assistant(message))
+    }
+    
+    private func shouldSendUpcomingReminders() -> Bool {
+        // Only send upcoming reminder messages once per day
+        let lastMessage = messages.last
+        guard let lastMessageTime = lastMessage?.timestamp else { return true }
+        
+        let timeSinceLastMessage = Date().timeIntervalSince(lastMessageTime)
+        return timeSinceLastMessage > 86400 // 24 hours
     }
     
     // MARK: - Canned Response System
     private func getCannedResponse(for message: String) -> String {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
         let lowercasedMessage = message.lowercased()
         
         // Budget-related keywords
@@ -141,13 +326,42 @@ class AssistantStore: ObservableObject {
     
     // MARK: - Response Generators
     private func generateBudgetResponse() -> String {
+        let finBotSettings = userStore.currentUser?.finBotSettings ?? FinBotSettings.default()
         let budgetCount = transactionStore.budgets.count
         let totalBudget = transactionStore.budgets.reduce(0) { $0 + $1.amount }
+        let emoji = finBotSettings.useEmojis
         
         if budgetCount == 0 {
-            return "💰 I can help you create your first budget! Start by setting spending limits for categories like groceries, entertainment, and transportation. Would you like to add a budget?"
+            switch finBotSettings.mood {
+            case .professional:
+                return "I recommend establishing budget allocations for your expense categories. Consider setting limits for essential categories such as groceries, utilities, and discretionary spending."
+            case .friendly:
+                return emoji ? "Hey! 😊 Let's get you started with budgeting! It's super helpful to set spending limits for things like groceries and entertainment. Want to create your first budget?" : "Hey! Let's get you started with budgeting! It's really helpful to set spending limits. Want to create your first budget?"
+            case .enthusiastic:
+                return emoji ? "🎉 Budgeting time! This is going to be amazing for your financial journey! Let's set some spending limits and take control of your money! Ready to create your first budget?" : "Budgeting time! This is going to be amazing for your financial journey! Ready to create your first budget?"
+            case .supportive:
+                return emoji ? "🤗 Don't worry, budgeting can feel overwhelming at first, but I'm here to help! Starting with simple spending limits for categories like groceries is a great first step." : "Don't worry, budgeting can feel overwhelming at first, but I'm here to help! Starting with simple spending limits is a great first step."
+            case .witty:
+                return emoji ? "💰 Ah, the art of budgeting! It's like being your own financial boss - except you actually have to listen to yourself! Want to set some spending boundaries?" : "Ah, the art of budgeting! It's like being your own financial boss. Want to set some spending boundaries?"
+            case .motivational:
+                return emoji ? "💪 Every financial champion starts with a budget! This is your foundation for building wealth and achieving your dreams. Let's create that first budget and start winning!" : "Every financial champion starts with a budget! This is your foundation for building wealth. Let's create that first budget!"
+            }
         } else {
-            return "📊 You have \(budgetCount) active budgets totaling $\(String(format: "%.2f", totalBudget)). I can help you analyze your budget performance or create new ones. What would you like to know?"
+            let baseInfo = "You have \(budgetCount) active budgets totaling $\(String(format: "%.2f", totalBudget))"
+            switch finBotSettings.mood {
+            case .professional:
+                return "\(emoji ? "📊 " : "")\(baseInfo). I can provide budget performance analysis or assist with creating additional budget categories."
+            case .friendly:
+                return "\(emoji ? "📊 " : "")\(baseInfo). I can help you see how you're doing or set up new budgets. What sounds good?"
+            case .enthusiastic:
+                return "\(emoji ? "🎉 " : "")\(baseInfo)! You're crushing it with your budget game! Want to dive deeper into your progress?"
+            case .supportive:
+                return "\(emoji ? "🤗 " : "")\(baseInfo). You're doing great with budgeting! I'm here to help you analyze your progress or expand your budgets."
+            case .witty:
+                return "\(emoji ? "📊 " : "")\(baseInfo). Look at you being all financially responsible! Want to see how well you're sticking to these budgets?"
+            case .motivational:
+                return "\(emoji ? "💪 " : "")\(baseInfo). You're building financial discipline! Let's analyze your progress and keep pushing toward your goals!"
+            }
         }
     }
     

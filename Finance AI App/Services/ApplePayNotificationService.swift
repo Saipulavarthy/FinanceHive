@@ -59,12 +59,13 @@ class NotificationService: UNNotificationServiceExtension {
     // MARK: - Core Data Storage
     func saveExpense(amount: Double, merchant: String) {
         let context = persistentContainer.viewContext
-        let expense = NSEntityDescription.insertNewObject(forEntityName: "RecurringExpense", into: context)
-        expense.setValue(amount, forKey: "amount")
-        expense.setValue(merchant, forKey: "category") // Or use a separate merchant field if you have one
-        expense.setValue(Date(), forKey: "date")
-        expense.setValue(false, forKey: "isRecurring")
-        expense.setValue(nil, forKey: "repeatInterval")
+        let expense = RecurringExpense(context: context)
+        expense.amount = amount
+        expense.category = merchant
+        expense.date = Date()
+        expense.isRecurring = false
+        expense.repeatInterval = nil
+        
         do {
             try context.save()
         } catch {

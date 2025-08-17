@@ -53,12 +53,12 @@ struct ImportApplePayReceiptView: View {
                 let amountString = String(receiptText[amountRange])
                 let merchant = String(receiptText[merchantRange])
                 if let amount = Double(amountString) {
-                    let expense = NSEntityDescription.insertNewObject(forEntityName: "RecurringExpense", into: viewContext)
-                    expense.setValue(amount, forKey: "amount")
-                    expense.setValue(merchant, forKey: "category")
-                    expense.setValue(Date(), forKey: "date")
-                    expense.setValue(false, forKey: "isRecurring")
-                    expense.setValue(nil, forKey: "repeatInterval")
+                    let expense = RecurringExpense(context: viewContext)
+                    expense.amount = amount
+                    expense.category = merchant
+                    expense.date = Date()
+                    expense.isRecurring = false
+                    expense.repeatInterval = nil
                     do {
                         try viewContext.save()
                         importResult = "Imported $\(amountString) at \(merchant) successfully!"

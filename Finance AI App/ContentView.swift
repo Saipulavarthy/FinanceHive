@@ -54,14 +54,14 @@ struct ContentView: View {
                 ZStack {
                     MainTabView(store: store, stockStore: stockStore, userStore: userStore, achievementsStore: achievementsStore)
                         .onAppear {
-                            store.setAchievementsStore(achievementsStore)
-                            if userStore.currentUser?.userProfile.isBeginner == nil {
-                                showBeginnerPrompt = true
-                            }
+                        store.setAchievementsStore(achievementsStore)
+                        if userStore.currentUser?.userProfile.isBeginner == nil {
+                            showBeginnerPrompt = true
                         }
-                        .sheet(isPresented: $showBeginnerPrompt) {
-                            BeginnerPromptView(userStore: userStore, isPresented: $showBeginnerPrompt)
-                        }
+                    }
+                    .sheet(isPresented: $showBeginnerPrompt) {
+                        BeginnerPromptView(userStore: userStore, isPresented: $showBeginnerPrompt)
+                    }
                 }
             } else {
                 SignUpView(userStore: userStore)
@@ -129,17 +129,15 @@ struct MainTabView: View {
             }
             
             NavigationView {
-                AssistantView(transactionStore: store, stockStore: stockStore)
+                AssistantView(transactionStore: store, stockStore: stockStore, userStore: userStore)
             }
             .tabItem {
                 Label("Assistant", systemImage: "message.circle.fill")
             }
-            NavigationView {
-                CommunityTab()
-            }
-            .tabItem {
-                Label("Community", systemImage: "person.3.fill")
-            }
+            GroupWalletView(userStore: userStore)
+                .tabItem {
+                    Label("Group", systemImage: "person.2.fill")
+                }
             NavigationView {
                 PortfolioView()
             }

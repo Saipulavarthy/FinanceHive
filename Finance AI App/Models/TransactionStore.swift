@@ -8,6 +8,10 @@ class TransactionStore: ObservableObject {
     
     private var achievementsStore: AchievementsStore?
     
+    init() {
+        setupNotificationObservers()
+    }
+    
     func setAchievementsStore(_ store: AchievementsStore) {
         self.achievementsStore = store
     }
@@ -171,6 +175,10 @@ class TransactionStore: ObservableObject {
         }
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     // Existing methods...
 }
 
@@ -205,5 +213,41 @@ struct FinancialSuggestion: Identifiable {
         case subscription
         case budgetOptimization
         case saving
+    }
+}
+
+// MARK: - TransactionStore Extension for Automatic Salary
+extension TransactionStore {
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: .addAutomaticIncome,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleAutomaticIncome(notification)
+        }
+    }
+    
+    private func handleAutomaticIncome(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let amount = userInfo["amount"] as? Double,
+              let description = userInfo["description"] as? String,
+              let date = userInfo["date"] as? Date else {
+            return
+        }
+        
+        let transaction = Transaction(
+            type: .income,
+            amount: amount,
+            category: .other, // or create a new category for salary
+            date: date,
+            description: description
+        )
+        
+        addTransaction(transaction)
+        
+        // Trigger achievement unlock for automatic salary
+        achievementsStore?.unlockAchievement(id: "auto_salary")
     }
 } 

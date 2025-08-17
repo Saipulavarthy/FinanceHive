@@ -2,18 +2,8 @@ import SwiftUI
 
 extension Font {
     static func poppins(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        switch weight {
-        case .black:
-            return .custom("Poppins-Black", size: size)
-        case .bold:
-            return .custom("Poppins-Bold", size: size)
-        case .semibold:
-            return .custom("Poppins-SemiBold", size: size)
-        case .medium:
-            return .custom("Poppins-Medium", size: size)
-        default:
-            return .custom("Poppins-Regular", size: size)
-        }
+        // Fall back to system font since Poppins isn't included in the app
+        return .system(size: size, weight: weight, design: .rounded)
     }
 }
 
@@ -26,6 +16,7 @@ struct SignUpView: View {
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var isSignIn = false
+    @State private var showingSalarySetup = false
     
     private let gradientColors: [Color] = [
         Color(hex: "FFA726").opacity(0.7),  // Orange
@@ -38,6 +29,10 @@ struct SignUpView: View {
     }
     
     var body: some View {
+        // TEMPORARY: Show test view to debug text input
+        TestTextFieldView()
+        
+        /* ORIGINAL CODE COMMENTED OUT:
         ZStack {
             // Animated gradient background
             LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -267,6 +262,10 @@ struct SignUpView: View {
         } message: {
             Text(alertMessage)
         }
+        .sheet(isPresented: $showingSalarySetup) {
+            SalarySetupView(userStore: userStore, isPresented: $showingSalarySetup)
+        }
+        */ // END OF COMMENTED ORIGINAL CODE
     }
     
     private let financeSymbols = [
@@ -302,7 +301,8 @@ struct SignUpView: View {
         }
         
         if userStore.signUp(name: name, email: email, password: password) {
-            // Success
+            // Show salary setup after successful sign up
+            showingSalarySetup = true
         } else {
             alertMessage = "Email already exists"
             showingAlert = true
@@ -334,18 +334,19 @@ struct CustomTextField: View {
     var body: some View {
         HStack {
             Image(systemName: systemImage)
-                .foregroundColor(Color(hex: "FB8C00"))
+                .foregroundColor(.blue)
                 .frame(width: 20)
             TextField(placeholder, text: $text)
-                .font(.poppins(16))
+                .foregroundColor(.black) // Force black text
+                .background(Color.white) // Force white background
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(hex: "FFA726").opacity(0.1))
+                .fill(Color.white) // Force white background
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(hex: "FFA726").opacity(0.3), lineWidth: 1)
+                        .stroke(Color.blue, lineWidth: 2)
                 )
         )
     }
@@ -360,18 +361,19 @@ struct CustomSecureField: View {
     var body: some View {
         HStack {
             Image(systemName: systemImage)
-                .foregroundColor(Color(hex: "FB8C00"))
+                .foregroundColor(.blue)
                 .frame(width: 20)
             SecureField(placeholder, text: $text)
-                .font(.poppins(16))
+                .foregroundColor(.black) // Force black text
+                .background(Color.white) // Force white background
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(hex: "FFA726").opacity(0.1))
+                .fill(Color.white) // Force white background
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color(hex: "FFA726").opacity(0.3), lineWidth: 1)
+                        .stroke(Color.blue, lineWidth: 2)
                 )
         )
     }

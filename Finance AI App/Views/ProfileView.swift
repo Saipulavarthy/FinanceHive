@@ -91,6 +91,71 @@ struct ProfileView: View {
                         }
                     }
                     
+                    Section(header: Label("Income & Salary", systemImage: "creditcard.fill").foregroundColor(.green)) {
+                        NavigationLink(destination: SalaryManagementView(userStore: userStore)) {
+                            HStack {
+                                Image(systemName: "dollarsign.circle.fill")
+                                VStack(alignment: .leading) {
+                                    Text("Automatic Salary")
+                                        .fontWeight(.medium)
+                                    if let schedule = userStore.currentUser?.salarySchedule {
+                                        Text("$\(String(format: "%.0f", schedule.amount)) \(schedule.frequency.rawValue.lowercased())")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text("Not set up")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .foregroundColor(.green)
+                        }
+                    }
+                    
+                    Section(header: Label("AI Assistant", systemImage: "brain.head.profile").foregroundColor(.purple)) {
+                        NavigationLink(destination: FinBotCustomizationView(userStore: userStore)) {
+                            HStack {
+                                Image(systemName: "theatermasks.fill")
+                                VStack(alignment: .leading) {
+                                    Text("Customize FinBot")
+                                        .fontWeight(.medium)
+                                    if let finBotSettings = userStore.currentUser?.finBotSettings {
+                                        Text("\(finBotSettings.mood.emoji) \(finBotSettings.mood.rawValue) • \(finBotSettings.theme.rawValue)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text("Personality, voice & theme")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .foregroundColor(.purple)
+                        }
+                        
+                        NavigationLink(destination: SmartFinanceAssistantView(
+                            budgetAdjuster: BudgetAdjuster(transactionStore: TransactionStore(), userStore: userStore),
+                            reminderManager: SmartReminderManager(transactionStore: TransactionStore(), userStore: userStore),
+                            userStore: userStore
+                        )) {
+                            HStack {
+                                Image(systemName: "lightbulb.fill")
+                                VStack(alignment: .leading) {
+                                    Text("AI Budget & Reminders")
+                                        .fontWeight(.medium)
+                                    Text("Smart budget adjustments & bill reminders")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                            }
+                            .foregroundColor(.purple)
+                        }
+                    }
+                    
                     Section(header: Label("Siri & Voice", systemImage: "mic.circle").foregroundColor(.orange)) {
                         NavigationLink(destination: SiriShortcutsView()) {
                             HStack {

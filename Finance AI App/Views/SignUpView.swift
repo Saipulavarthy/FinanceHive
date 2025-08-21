@@ -29,10 +29,7 @@ struct SignUpView: View {
     }
     
     var body: some View {
-        // TEMPORARY: Show test view to debug text input
-        TestTextFieldView()
-        
-        /* ORIGINAL CODE COMMENTED OUT:
+        // ORIGINAL CODE:
         ZStack {
             // Animated gradient background
             LinearGradient(colors: gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -101,16 +98,12 @@ struct SignUpView: View {
                             }
                             .offset(x: -20, y: -20)
                             
-                            // Dollar symbol
-                            Text("$")
-                                .font(.system(size: 50, weight: .bold, design: .rounded))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [Color(hex: "FFA726"), Color(hex: "FB8C00")],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
+                            // FinanceHive Logo
+                            Image("FinanceHive")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 60, height: 60)
+                                .shadow(color: .black.opacity(0.2), radius: 5)
                         }
                         
                         // App name with modern typography
@@ -265,7 +258,6 @@ struct SignUpView: View {
         .sheet(isPresented: $showingSalarySetup) {
             SalarySetupView(userStore: userStore, isPresented: $showingSalarySetup)
         }
-        */ // END OF COMMENTED ORIGINAL CODE
     }
     
     private let financeSymbols = [
@@ -430,4 +422,4 @@ struct HexagonShape: Shape {
         path.closeSubpath()
         return path
     }
-} 
+}

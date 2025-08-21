@@ -60,6 +60,21 @@ struct TestTextFieldView: View {
             .border(Color.orange, width: 2)
             
             Spacer()
+            
+            // Navigation button to main app
+            NavigationLink(destination: ContentView()) {
+                HStack {
+                    Image(systemName: "house.fill")
+                    Text("Go to Main App")
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .cornerRadius(12)
+            }
+            .padding(.horizontal, 40)
         }
         .padding()
     }

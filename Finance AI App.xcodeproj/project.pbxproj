@@ -110,10 +110,10 @@
 			fileSystemSynchronizedGroups = (
 				5EAC912B2D38233900FE3A9A /* Finance AI App */,
 			);
-			name = "Finance AI App";
+							name = "FinanceHive";
 			packageProductDependencies = (
 			);
-			productName = "Finance AI App";
+							productName = "FinanceHive";
 			productReference = 5EAC91292D38233900FE3A9A /* Finance AI App.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -396,6 +396,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Finance AI App/Preview Content\"";
+				DEVELOPMENT_TEAM = 2235HM6W49;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -403,6 +404,10 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -424,6 +429,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Finance AI App/Preview Content\"";
+				DEVELOPMENT_TEAM = 2235HM6W49;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -431,6 +437,11 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to convert your voice into text for adding expenses and interacting with the AI assistant. Your voice data is processed locally and not recorded.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -23,17 +23,53 @@ struct SentimentScore: Codable {
 }
 
 class StockPredictionService {
-    // Fetch real-time price from Yahoo Finance
+    // Fetch real-time price from Yahoo Finance with Stooq fallback
     static func fetchYahooRealTimePrice(for symbol: String, completion: @escaping (Double?) -> Void) {
-        let url = URL(string: "https://query1.finance.yahoo.com/v7/finance/quote?symbols=\(symbol)")!
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        guard let url = URL(string: "https://query1.finance.yahoo.com/v7/finance/quote?symbols=\(symbol.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? symbol)") else {
+            fetchFromStooq(symbol: symbol, completion: completion)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                fetchFromStooq(symbol: symbol, completion: completion)
+                return
+            }
             guard let data = data,
                   let decoded = try? JSONDecoder().decode(YahooQuoteResponse.self, from: data),
                   let price = decoded.quoteResponse.result.first?.regularMarketPrice else {
-                completion(nil)
+                fetchFromStooq(symbol: symbol, completion: completion)
                 return
             }
             completion(price)
+        }.resume()
+    }
+    
+    private static func fetchFromStooq(symbol: String, completion: @escaping (Double?) -> Void) {
+        let stooqSymbol = symbol.lowercased() + ".us"
+        guard let url = URL(string: "https://stooq.com/q/l/?s=\(stooqSymbol.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? stooqSymbol)&i=d") else {
+            completion(nil)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("text/plain", forHTTPHeaderField: "Accept")
+        URLSession.shared.dataTask(with: request) { data, response, _ in
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode),
+                  let data = data,
+                  let csv = String(data: data, encoding: .utf8) else {
+                completion(nil)
+                return
+            }
+            let lines = csv.split(separator: "\n").map(String.init)
+            guard lines.count >= 2 else { completion(nil); return }
+            let fields = lines[1].split(separator: ",").map(String.init)
+            guard fields.count >= 8 else { completion(nil); return }
+            let closePrice = Double(fields[6])
+            completion(closePrice)
         }.resume()
     }
 
@@ -44,7 +80,7 @@ class StockPredictionService {
             let risk = userProfile?.riskLevel ?? .medium
             let goal = userProfile?.investmentGoal ?? .growth
             let sectors = userProfile?.preferredSectors ?? []
-            let explanationBase = "Prediction based on Yahoo real-time price ($\(String(format: "%.2f", realTimePrice ?? 0))). Risk=\(risk.rawValue.capitalized), Goal=\(goal.rawValue.capitalized)\(sectors.isEmpty ? "" : ", Sectors=\(sectors.joined(separator: ", "))")"
+            let explanationBase = "Prediction based on real-time price ($\(String(format: "%.2f", realTimePrice ?? 0))). Risk=\(risk.rawValue.capitalized), Goal=\(goal.rawValue.capitalized)\(sectors.isEmpty ? "" : ", Sectors=\(sectors.joined(separator: ", "))")"
             let basePrice = realTimePrice ?? Double.random(in: 100...500)
             let predictedPrices = (1...7).map { i in
                 PredictedPrice(

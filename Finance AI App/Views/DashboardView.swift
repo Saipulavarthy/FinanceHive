@@ -10,9 +10,13 @@ struct DashboardView: View {
     @State private var showingBudgetSheet = false
     @State private var showingAddTransactionSheet = false
     @State private var newTransactionType: Transaction.TransactionType = .expense
-                    @State private var showingAddExpenseSheet = false
-                @State private var showingScanReceiptSheet = false
-                @State private var showingVoiceExpenseSheet = false
+    @State private var showingAddExpenseSheet = false
+    @State private var showingScanReceiptSheet = false
+    @State private var showingVoiceExpenseSheet = false
+    @State private var showingAddBudget = false
+    @State private var selectedCategory: Transaction.Category = .other
+    @State private var budgetAmount = ""
+    @State private var alertThreshold = 0.8
     
     enum TimeFrame: String, CaseIterable {
         case week = "Week"
@@ -65,79 +69,135 @@ struct DashboardView: View {
                 
                 // Quick Actions
                 HStack(spacing: 20) {
-                    Button(action: {
-                        showingAddExpenseSheet = true
+                    Button(action: { 
+                        newTransactionType = .expense
+                        showingAddTransactionSheet = true 
                     }) {
-                        Label("Add Expense", systemImage: "minus.circle.fill")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.red)
-                            .cornerRadius(12)
+                        VStack {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            Text("Add Expense")
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(radius: 2)
                     }
                     
-                    Button(action: {
+                    Button(action: { 
                         newTransactionType = .income
-                        showingAddTransactionSheet = true
+                        showingAddTransactionSheet = true 
                     }) {
-                        Label("Add Income", systemImage: "plus.circle.fill")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.green)
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Additional Action Buttons
-                HStack(spacing: 20) {
-                    // Scan Receipt Button
-                    Button(action: {
-                        showingScanReceiptSheet = true
-                    }) {
-                        Label("Scan Receipt", systemImage: "camera.fill")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]), startPoint: .leading, endPoint: .trailing))
-                            .cornerRadius(12)
+                        VStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.green)
+                            Text("Add Income")
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(radius: 2)
                     }
                     
-                    // Voice Expense Button
-                    Button(action: {
-                        showingVoiceExpenseSheet = true
-                    }) {
-                        Label("Voice Entry", systemImage: "mic.fill")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(LinearGradient(gradient: Gradient(colors: [Color.orange, Color.red]), startPoint: .leading, endPoint: .trailing))
-                            .cornerRadius(12)
+                    Button(action: { showingScanReceiptSheet = true }) {
+                        VStack {
+                            Image(systemName: "camera.fill")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                            Text("Scan Receipt")
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(radius: 2)
+                    }
+                    
+                    Button(action: { showingVoiceExpenseSheet = true }) {
+                        VStack {
+                            Image(systemName: "mic.fill")
+                                .font(.title2)
+                                .foregroundColor(.purple)
+                            Text("Voice Entry")
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(radius: 2)
                     }
                 }
                 .padding(.horizontal)
                 
-                // Budget visualization
+                // Budget Management Section
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("Budget Overview")
+                        Text("Budget Management")
                             .font(.headline)
                         
                         Spacer()
                         
-                        Button(action: { showingBudgetSheet = true }) {
-                            Text("Manage Budgets")
+                        Button(action: { showingAddBudget = true }) {
+                            Label("Add Budget", systemImage: "plus.circle.fill")
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
                         }
                     }
                     
+                    // Budget Alerts
+                    if !store.alerts.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Alerts")
+                                .font(.subheadline)
+                                .bold()
+                            
+                            ForEach(store.alerts) { alert in
+                                HStack {
+                                    Image(systemName: alert.severity == .critical ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
+                                        .foregroundColor(alert.severity == .critical ? .red : .yellow)
+                                    Text(alert.message)
+                                        .foregroundColor(alert.severity == .critical ? .red : .primary)
+                                        .font(.subheadline)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    
+                    // Budget Progress
                     BudgetProgressView(store: store)
+                }
+                .padding()
+                .background(Color(.systemBackground))
+                .cornerRadius(12)
+                .shadow(radius: 2)
+                
+                // Spending Insights Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Spending Insights")
+                        .font(.headline)
+                    
+                    ForEach(store.getSpendingTrends()) { insight in
+                        SpendingInsightRow(insight: insight)
+                    }
+                    
+                    if store.getSpendingTrends().isEmpty {
+                        Text("No spending trends available yet. Keep tracking your expenses!")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding()
+                    }
                 }
                 .padding()
                 .background(Color(.systemBackground))
@@ -202,7 +262,7 @@ struct DashboardView: View {
                 // AI-powered Tips
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("Finbot Tips")
+                        Text("Smart Suggestions")
                             .font(.headline)
                         Spacer()
                         Image(systemName: "lightbulb.fill")
@@ -215,7 +275,7 @@ struct DashboardView: View {
                             .foregroundColor(.secondary)
                             .padding()
                     } else {
-                        ForEach(store.generateSuggestions().prefix(1)) { suggestion in
+                        ForEach(store.generateSuggestions().prefix(2)) { suggestion in
                             SuggestionRow(suggestion: suggestion)
                         }
                     }
@@ -243,6 +303,9 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingVoiceExpenseSheet) {
             VoiceExpenseView(isPresented: $showingVoiceExpenseSheet)
+        }
+        .sheet(isPresented: $showingAddBudget) {
+            AddBudgetView(store: store)
         }
     }
 }

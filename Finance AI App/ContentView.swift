@@ -116,13 +116,6 @@ struct MainTabView: View {
             }
             
             NavigationView {
-                BudgetView(store: store)
-            }
-            .tabItem {
-                Label("Budgets", systemImage: "dollarsign.circle.fill")
-            }
-            
-            NavigationView {
                 StockView()
                     .environmentObject(userStore)
             }

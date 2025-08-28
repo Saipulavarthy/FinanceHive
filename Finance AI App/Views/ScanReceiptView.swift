@@ -1,10 +1,10 @@
 import SwiftUI
 import AVFoundation
 import Vision
-import CoreData
 
 struct ScanReceiptView: View {
-    @Environment(\.managedObjectContext) private var viewContext
+    @ObservedObject var store: TransactionStore
+    @Environment(\.dismiss) private var dismiss
     @State private var isShowingCamera = false
     @State private var scannedText = ""
     @State private var extractedAmount: Double?
@@ -36,8 +36,21 @@ struct ScanReceiptView: View {
                     isShowingCamera = true
                 }
                 
+                // Processing indicator
+                if isProcessing {
+                    VStack {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Text("Analyzing receipt...")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                            .padding(.top)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                
                 // Scan results
-                if !scannedText.isEmpty {
+                if !scannedText.isEmpty && !isProcessing {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Scanned Text:")
                             .font(.headline)
@@ -78,7 +91,7 @@ struct ScanReceiptView: View {
                                 .foregroundColor(.primary)
                             
                             Picker("Category", selection: $extractedCategory) {
-                                ForEach(Transaction.Category.allCases, id: \..self) { category in
+                                ForEach(Transaction.Category.allCases, id: \.self) { category in
                                     Text(category.rawValue).tag(category)
                                 }
                             }
@@ -111,13 +124,20 @@ struct ScanReceiptView: View {
             .padding()
             .navigationTitle("Scan Receipt")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(trailing: Button("Done") {
+                dismiss()
+            })
             .sheet(isPresented: $isShowingCamera) {
                 CameraView { image in
                     processImage(image)
                 }
             }
             .alert("Scan Result", isPresented: $showingAlert) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) { 
+                    if alertMessage.contains("successfully") {
+                        dismiss()
+                    }
+                }
             } message: {
                 Text(alertMessage)
             }
@@ -208,28 +228,23 @@ struct ScanReceiptView: View {
     private func saveExpense() {
         guard let amount = extractedAmount else { return }
         
-        let expense = NSEntityDescription.insertNewObject(forEntityName: "RecurringExpense", into: viewContext)
-        expense.setValue(amount, forKey: "amount")
-        expense.setValue(extractedCategory.rawValue, forKey: "category")
-        expense.setValue("Scanned receipt from \(extractedMerchant)", forKey: "note")
-        expense.setValue(Date(), forKey: "date")
-        expense.setValue(false, forKey: "isRecurring")
-        expense.setValue(nil as String?, forKey: "repeatInterval")
+        let transaction = Transaction(
+            type: .expense,
+            amount: amount,
+            category: extractedCategory,
+            date: Date(),
+            description: "Scanned receipt from \(extractedMerchant)"
+        )
         
-        do {
-            try viewContext.save()
-            alertMessage = "Expense saved successfully!"
-            showingAlert = true
-            
-            // Reset form
-            scannedText = ""
-            extractedAmount = nil
-            extractedMerchant = ""
-            extractedCategory = .other
-        } catch {
-            alertMessage = "Failed to save expense: \(error.localizedDescription)"
-            showingAlert = true
-        }
+        store.addTransaction(transaction)
+        alertMessage = "Expense saved successfully!"
+        showingAlert = true
+        
+        // Reset form
+        scannedText = ""
+        extractedAmount = nil
+        extractedMerchant = ""
+        extractedCategory = .other
     }
 }
 
@@ -270,6 +285,5 @@ struct CameraView: UIViewControllerRepresentable {
 }
 
 #Preview {
-    ScanReceiptView()
-        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ScanReceiptView(store: TransactionStore())
 }

@@ -187,7 +187,9 @@ class SharedWalletStore: ObservableObject {
     
     private func loadWallets() {
         guard let data = userDefaults.data(forKey: walletsKey) else {
-            createSampleData()
+            // Start with empty wallets - no sample data
+            sharedWallets = []
+            currentWallet = nil
             return
         }
         
@@ -204,7 +206,9 @@ class SharedWalletStore: ObservableObject {
             }
         } catch {
             print("Failed to load shared wallets: \(error)")
-            createSampleData()
+            // Start with empty wallets on error - no sample data
+            sharedWallets = []
+            currentWallet = nil
         }
     }
     
@@ -243,41 +247,6 @@ class SharedWalletStore: ObservableObject {
     private func generateRandomColor() -> Color {
         let colors: [Color] = [.blue, .green, .orange, .purple, .pink, .red, .yellow, .teal, .indigo, .mint]
         return colors.randomElement() ?? .blue
-    }
-    
-    private func createSampleData() {
-        // Create sample shared wallet for demo
-        let sampleUser = GroupMember(name: "You", email: "you@example.com", avatarColor: .blue)
-        let roommate1 = GroupMember(name: "Alex", email: "alex@example.com", avatarColor: .green)
-        let roommate2 = GroupMember(name: "Jordan", email: "jordan@example.com", avatarColor: .orange)
-        
-        var sampleWallet = SharedWallet(name: "Apartment Expenses", description: "Shared expenses for our apartment", createdByMember: sampleUser)
-        sampleWallet.members.append(contentsOf: [roommate1, roommate2])
-        
-        // Add sample expenses
-        let expense1 = SharedExpense(
-            amount: 120.00,
-            description: "Grocery shopping",
-            category: .groceries,
-            paidByMemberId: sampleUser.id,
-            splitBetween: [sampleUser.id, roommate1.id, roommate2.id]
-        )
-        
-        let expense2 = SharedExpense(
-            amount: 60.00,
-            description: "Pizza night",
-            category: .entertainment,
-            paidByMemberId: roommate1.id,
-            splitBetween: [sampleUser.id, roommate1.id, roommate2.id]
-        )
-        
-        sampleWallet.expenses = [expense1, expense2]
-        sampleWallet.totalSpent = 180.00
-        sampleWallet.updateMemberBalances()
-        
-        sharedWallets = [sampleWallet]
-        currentWallet = sampleWallet
-        saveWallets()
     }
     
     // MARK: - Analytics

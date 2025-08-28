@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5EAC91292D38233900FE3A9A /* Finance AI App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Finance AI App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5EAC91292D38233900FE3A9A /* Finance AI App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Finance AI App.app"; path = FinanceHive.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EAC91392D38233C00FE3A9A /* Finance AI AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Finance AI AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EAC91432D38233C00FE3A9A /* Finance AI AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Finance AI AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		5EAC91282D38233900FE3A9A /* Finance AI App */ = {
+		5EAC91282D38233900FE3A9A /* FinanceHive */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5EAC914D2D38233C00FE3A9A /* Build configuration list for PBXNativeTarget "Finance AI App" */;
+			buildConfigurationList = 5EAC914D2D38233C00FE3A9A /* Build configuration list for PBXNativeTarget "FinanceHive" */;
 			buildPhases = (
 				5EAC91252D38233900FE3A9A /* Sources */,
 				5EAC91262D38233900FE3A9A /* Frameworks */,
@@ -110,10 +110,10 @@
 			fileSystemSynchronizedGroups = (
 				5EAC912B2D38233900FE3A9A /* Finance AI App */,
 			);
-							name = "FinanceHive";
+			name = FinanceHive;
 			packageProductDependencies = (
 			);
-							productName = "FinanceHive";
+			productName = FinanceHive;
 			productReference = 5EAC91292D38233900FE3A9A /* Finance AI App.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -200,7 +200,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				5EAC91282D38233900FE3A9A /* Finance AI App */,
+				5EAC91282D38233900FE3A9A /* FinanceHive */,
 				5EAC91382D38233C00FE3A9A /* Finance AI AppTests */,
 				5EAC91422D38233C00FE3A9A /* Finance AI AppUITests */,
 			);
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		5EAC913B2D38233C00FE3A9A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5EAC91282D38233900FE3A9A /* Finance AI App */;
+			target = 5EAC91282D38233900FE3A9A /* FinanceHive */;
 			targetProxy = 5EAC913A2D38233C00FE3A9A /* PBXContainerItemProxy */;
 		};
 		5EAC91452D38233C00FE3A9A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 5EAC91282D38233900FE3A9A /* Finance AI App */;
+			target = 5EAC91282D38233900FE3A9A /* FinanceHive */;
 			targetProxy = 5EAC91442D38233C00FE3A9A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -399,15 +399,15 @@
 				DEVELOPMENT_TEAM = 2235HM6W49;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -432,16 +432,16 @@
 				DEVELOPMENT_TEAM = 2235HM6W49;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to convert your voice into text for adding expenses and interacting with the AI assistant. Your voice data is processed locally and not recorded.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to securely authenticate you and protect your financial data. Your biometric data is stored securely on your device and is never shared.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to scan receipts and documents for expense tracking. Your photos are processed locally and are not shared.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input to add expenses and interact with the AI assistant. Audio is processed locally and not recorded.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app accesses your photo library to import receipt images for expense tracking. Your photos are processed locally and are not shared.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to convert your voice into text for adding expenses and interacting with the AI assistant. Your voice data is processed locally and not recorded.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -537,7 +537,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5EAC914D2D38233C00FE3A9A /* Build configuration list for PBXNativeTarget "Finance AI App" */ = {
+		5EAC914D2D38233C00FE3A9A /* Build configuration list for PBXNativeTarget "FinanceHive" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5EAC914E2D38233C00FE3A9A /* Debug */,

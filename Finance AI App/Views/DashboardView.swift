@@ -299,7 +299,7 @@ struct DashboardView: View {
             NewExpenseView(isPresented: $showingAddExpenseSheet)
         }
         .sheet(isPresented: $showingScanReceiptSheet) {
-            ScanReceiptView()
+            ScanReceiptView(store: store)
         }
         .sheet(isPresented: $showingVoiceExpenseSheet) {
             VoiceExpenseView(isPresented: $showingVoiceExpenseSheet)
@@ -333,6 +333,65 @@ struct HeaderView: View {
                 endPoint: .bottomTrailing
             )
         )
+    }
+}
+
+struct SpendingInsightRow: View {
+    let insight: SpendingInsight
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(insight.category.rawValue)
+                    .font(.headline)
+                Spacer()
+                Text("$\(String(format: "%.2f", insight.currentAmount))")
+                    .font(.subheadline)
+                    .bold()
+            }
+            
+            HStack {
+                Image(systemName: insight.percentageChange > 0 ? "arrow.up.right" : "arrow.down.right")
+                    .foregroundColor(insight.percentageChange > 0 ? .red : .green)
+                Text("\(String(format: "%.1f", abs(insight.percentageChange)))%")
+                    .foregroundColor(insight.percentageChange > 0 ? .red : .green)
+                    .font(.subheadline)
+                Text("vs last month")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Spacer()
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+    }
+}
+
+struct SuggestionRow: View {
+    let suggestion: FinancialSuggestion
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: suggestionIcon)
+                    .foregroundColor(.blue)
+                Text(suggestion.message)
+                    .font(.headline)
+                Spacer()
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+    }
+    
+    private var suggestionIcon: String {
+        switch suggestion.type {
+        case .subscription: return "repeat.circle"
+        case .budgetOptimization: return "chart.pie"
+        case .saving: return "dollarsign.circle"
+        }
     }
 }
 
@@ -797,28 +856,97 @@ struct DashboardSummaryView: View {
             }
             .frame(width: 120, height: 120)
             
-            // Bar chart of expenses by category
-            Chart {
-                ForEach(expensesByCategory, id: \..0) { (category, total) in
-                    BarMark(
-                        x: .value("Category", category.rawValue),
-                        y: .value("Spent", total)
-                    )
-                    .foregroundStyle(.blue)
+            // Clean bar chart of expenses by category
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Spending by Category")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                if expensesByCategory.isEmpty {
+                    Text("No expenses yet")
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 40)
+                } else {
+                    VStack(spacing: 12) {
+                        ForEach(expensesByCategory.prefix(6), id: \.0) { (category, total) in
+                            HStack {
+                                // Category name with icon
+                                HStack(spacing: 8) {
+                                    Image(systemName: categoryIcon(for: category))
+                                        .foregroundColor(.blue)
+                                        .frame(width: 20)
+                                    
+                                    Text(shortCategoryName(for: category))
+                                        .font(.subheadline)
+                                        .foregroundColor(.primary)
+                                        .lineLimit(1)
+                                }
+                                .frame(width: 80, alignment: .leading)
+                                
+                                // Progress bar
+                                GeometryReader { geometry in
+                                    ZStack(alignment: .leading) {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .frame(height: 8)
+                                            .cornerRadius(4)
+                                        
+                                        Rectangle()
+                                            .fill(Color.blue)
+                                            .frame(width: geometry.size.width * min(total / maxSpent, 1.0), height: 8)
+                                            .cornerRadius(4)
+                                    }
+                                }
+                                .frame(height: 8)
+                                
+                                // Amount
+                                Text("$\(String(format: "%.0f", total))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 50, alignment: .trailing)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 4)
                 }
             }
-            .frame(height: 200)
-            .chartYAxis {
-                AxisMarks(position: .leading)
-            }
-            .chartXAxisLabel("Category")
-            .chartYAxisLabel("Spent ($)")
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(radius: 2)
         .padding(.horizontal)
+    }
+    
+    private var maxSpent: Double {
+        expensesByCategory.map(\.1).max() ?? 1 // Default to 1 if no expenses
+    }
+    
+    private func categoryIcon(for category: Transaction.Category) -> String {
+        switch category {
+        case .groceries: return "cart.fill"
+        case .transportation: return "car.fill"
+        case .rent: return "house.fill"
+        case .utilities: return "bolt.fill"
+        case .entertainment: return "film"
+        case .other: return "ellipsis.circle"
+        }
+    }
+    
+    private func shortCategoryName(for category: Transaction.Category) -> String {
+        switch category {
+        case .groceries: return "Groceries"
+        case .transportation: return "Transport"
+        case .rent: return "Rent"
+        case .utilities: return "Utilities"
+        case .entertainment: return "Entertainment"
+        case .other: return "Other"
+        }
     }
 }
 

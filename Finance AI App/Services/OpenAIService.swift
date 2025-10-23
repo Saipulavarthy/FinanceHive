@@ -3,7 +3,20 @@ import Foundation
 struct OpenAIService {
     static let shared = OpenAIService()
     
-    private let apiKey = "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"
+    private let apiKey: String = {
+        // Try to load from environment variable first
+        if let envKey = ProcessInfo.processInfo.environment["OPENAI_API_KEY"], !envKey.isEmpty {
+            return envKey
+        }
+        
+        // Fallback to UserDefaults for development
+        if let storedKey = UserDefaults.standard.string(forKey: "OpenAI_API_Key"), !storedKey.isEmpty {
+            return storedKey
+        }
+        
+        // Return placeholder if no key found
+        return "YOUR_OPENAI_API_KEY_HERE"
+    }()
     private let baseURL = "https://api.openai.com/v1/chat/completions"
     
     private init() {}

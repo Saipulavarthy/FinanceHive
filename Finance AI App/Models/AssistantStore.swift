@@ -32,6 +32,9 @@ class AssistantStore: ObservableObject {
         messages.append(.user(content))
         isTyping = true
         Task {
+            // First, try to detect and create automatic expenses
+            await detectAndCreateExpenses(from: content)
+            
             let response = await fetchAIResponse(for: content)
             messages.append(.assistant(response))
             isTyping = false
@@ -412,4 +415,214 @@ class AssistantStore: ObservableObject {
         
         return responses.randomElement() ?? responses[0]
     }
+    
+    // MARK: - Smart Expense Detection
+    
+    private func detectAndCreateExpenses(from message: String) async {
+        let lowercasedMessage = message.lowercased()
+        
+        // Detect subscription mentions
+        if let subscriptionInfo = detectSubscriptionMention(in: lowercasedMessage) {
+            await createSubscriptionExpense(subscriptionInfo)
+        }
+        
+        // Detect recurring expense mentions
+        if let recurringInfo = detectRecurringExpenseMention(in: lowercasedMessage) {
+            await createRecurringExpense(recurringInfo)
+        }
+        
+        // Detect one-time expense mentions
+        if let expenseInfo = detectExpenseMention(in: lowercasedMessage) {
+            await createOneTimeExpense(expenseInfo)
+        }
+    }
+    
+    private func detectSubscriptionMention(in message: String) -> SubscriptionInfo? {
+        // Common subscription keywords
+        let subscriptionKeywords = [
+            "netflix", "spotify", "apple music", "youtube premium", "disney+", "hulu",
+            "amazon prime", "adobe", "microsoft office", "dropbox", "icloud",
+            "gym membership", "gym", "fitness", "planet fitness", "equinox",
+            "phone bill", "internet", "cable", "electricity", "gas bill",
+            "insurance", "car insurance", "health insurance", "renters insurance"
+        ]
+        
+        // Amount patterns
+        let amountPatterns = [
+            "\\$?(\\d+(?:\\.\\d{2})?)",  // $9.99 or 9.99
+            "(\\d+(?:\\.\\d{2})?)\\s*dollars?",  // 9.99 dollars
+            "(\\d+(?:\\.\\d{2})?)\\s*per\\s*month",  // 9.99 per month
+            "(\\d+(?:\\.\\d{2})?)\\s*monthly"  // 9.99 monthly
+        ]
+        
+        for keyword in subscriptionKeywords {
+            if message.contains(keyword) {
+                for pattern in amountPatterns {
+                    if let range = message.range(of: pattern, options: .regularExpression) {
+                        let amountString = String(message[range])
+                        if let amount = extractAmount(from: amountString) {
+                            return SubscriptionInfo(
+                                service: keyword,
+                                amount: amount,
+                                frequency: .monthly
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    private func detectRecurringExpenseMention(in message: String) -> RecurringExpenseInfo? {
+        let recurringKeywords = [
+            "rent", "mortgage", "car payment", "loan payment", "credit card",
+            "subscription", "membership", "monthly", "weekly", "annually"
+        ]
+        
+        for keyword in recurringKeywords {
+            if message.contains(keyword) {
+                // Try to extract amount
+                let amountPatterns = [
+                    "\\$?(\\d+(?:\\.\\d{2})?)",
+                    "(\\d+(?:\\.\\d{2})?)\\s*dollars?",
+                    "(\\d+(?:\\.\\d{2})?)\\s*per\\s*(month|week|year)"
+                ]
+                
+                for pattern in amountPatterns {
+                    if let range = message.range(of: pattern, options: .regularExpression) {
+                        let amountString = String(message[range])
+                        if let amount = extractAmount(from: amountString) {
+                            let frequency = determineFrequency(from: message)
+                            return RecurringExpenseInfo(
+                                description: keyword,
+                                amount: amount,
+                                frequency: frequency
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    private func detectExpenseMention(in message: String) -> ExpenseInfo? {
+        // Look for expense patterns like "I spent $50 on groceries"
+        let expensePatterns = [
+            "spent\\s*\\$?(\\d+(?:\\.\\d{2})?)\\s*on\\s*(\\w+)",
+            "paid\\s*\\$?(\\d+(?:\\.\\d{2})?)\\s*for\\s*(\\w+)",
+            "bought\\s*(\\w+)\\s*for\\s*\\$?(\\d+(?:\\.\\d{2})?)"
+        ]
+        
+        for pattern in expensePatterns {
+            if let range = message.range(of: pattern, options: .regularExpression) {
+                let match = String(message[range])
+                if let amount = extractAmount(from: match),
+                   let category = extractCategory(from: match) {
+                    return ExpenseInfo(
+                        amount: amount,
+                        category: category,
+                        description: match
+                    )
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    private func extractAmount(from text: String) -> Double? {
+        let cleanedText = text.replacingOccurrences(of: "$", with: "")
+        return Double(cleanedText)
+    }
+    
+    private func extractCategory(from text: String) -> Transaction.Category? {
+        let lowercased = text.lowercased()
+        return Transaction.category(for: lowercased)
+    }
+    
+    private func determineFrequency(from message: String) -> RecurringFrequency {
+        if message.contains("weekly") || message.contains("week") {
+            return .weekly
+        } else if message.contains("yearly") || message.contains("annual") || message.contains("year") {
+            return .yearly
+        } else {
+            return .monthly
+        }
+    }
+    
+    private func createSubscriptionExpense(_ info: SubscriptionInfo) async {
+        let transaction = Transaction(
+            type: .expense,
+            amount: info.amount,
+            category: .subscriptions, // Use the new subscriptions category
+            date: Date(),
+            description: "\(info.service) subscription"
+        )
+        
+        transactionStore.addTransaction(transaction)
+        
+        // Add a follow-up message about the subscription
+        let followUpMessage = "📱 I've added your \(info.service) subscription ($\(String(format: "%.2f", info.amount))/month) to your expenses. I'll help you track this recurring cost!"
+        messages.append(.assistant(followUpMessage))
+    }
+    
+    private func createRecurringExpense(_ info: RecurringExpenseInfo) async {
+        let transaction = Transaction(
+            type: .expense,
+            amount: info.amount,
+            category: Transaction.category(for: info.description),
+            date: Date(),
+            description: "\(info.description) - \(info.frequency.rawValue)"
+        )
+        
+        transactionStore.addTransaction(transaction)
+        
+        let followUpMessage = "💰 I've added your \(info.description) expense ($\(String(format: "%.2f", info.amount)) \(info.frequency.rawValue)) to your tracker. This will help you monitor your recurring costs!"
+        messages.append(.assistant(followUpMessage))
+    }
+    
+    private func createOneTimeExpense(_ info: ExpenseInfo) async {
+        let transaction = Transaction(
+            type: .expense,
+            amount: info.amount,
+            category: info.category,
+            date: Date(),
+            description: info.description
+        )
+        
+        transactionStore.addTransaction(transaction)
+        
+        let followUpMessage = "💸 I've added your \(info.category.rawValue) expense ($\(String(format: "%.2f", info.amount))) to your tracker. Keep tracking your spending to stay on budget!"
+        messages.append(.assistant(followUpMessage))
+    }
+}
+
+// MARK: - Supporting Types for Smart Expense Detection
+
+struct SubscriptionInfo {
+    let service: String
+    let amount: Double
+    let frequency: RecurringFrequency
+}
+
+struct RecurringExpenseInfo {
+    let description: String
+    let amount: Double
+    let frequency: RecurringFrequency
+}
+
+struct ExpenseInfo {
+    let amount: Double
+    let category: Transaction.Category
+    let description: String
+}
+
+enum RecurringFrequency: String, CaseIterable {
+    case weekly = "weekly"
+    case monthly = "monthly"
+    case yearly = "yearly"
 } 

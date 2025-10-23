@@ -934,6 +934,8 @@ struct DashboardSummaryView: View {
         case .rent: return "house.fill"
         case .utilities: return "bolt.fill"
         case .entertainment: return "film"
+        case .subscriptions: return "play.rectangle.fill"
+        case .insurance: return "shield.fill"
         case .other: return "ellipsis.circle"
         }
     }
@@ -945,6 +947,8 @@ struct DashboardSummaryView: View {
         case .rent: return "Rent"
         case .utilities: return "Utilities"
         case .entertainment: return "Entertainment"
+        case .subscriptions: return "Subscriptions"
+        case .insurance: return "Insurance"
         case .other: return "Other"
         }
     }

@@ -20,6 +20,8 @@ struct Transaction: Identifiable, Codable {
         case entertainment = "Entertainment"
         case utilities = "Utilities"
         case transportation = "Transportation"
+        case subscriptions = "Subscriptions"
+        case insurance = "Insurance"
         case other = "Other"
     }
     
@@ -39,16 +41,42 @@ struct Transaction: Identifiable, Codable {
             "whole foods": .groceries,
             "trader joe": .groceries,
             // Entertainment
-            "netflix": .entertainment,
-            "spotify": .entertainment,
             "airbnb": .entertainment,
             "delta": .entertainment,
+            "movie": .entertainment,
+            "game": .entertainment,
+            // Subscriptions
+            "subscription": .subscriptions,
+            "netflix": .subscriptions,
+            "spotify": .subscriptions,
+            "apple music": .subscriptions,
+            "youtube premium": .subscriptions,
+            "disney+": .subscriptions,
+            "hulu": .subscriptions,
+            "amazon prime": .subscriptions,
+            "adobe": .subscriptions,
+            "microsoft office": .subscriptions,
+            "dropbox": .subscriptions,
+            "icloud": .subscriptions,
+            "gym membership": .subscriptions,
+            "fitness": .subscriptions,
             // Utilities
             "comcast": .utilities,
             "att": .utilities,
             "verizon": .utilities,
+            "electricity": .utilities,
+            "gas bill": .utilities,
+            "internet": .utilities,
+            "cable": .utilities,
+            "phone bill": .utilities,
+            // Insurance
+            "insurance": .insurance,
+            "car insurance": .insurance,
+            "health insurance": .insurance,
+            "renters insurance": .insurance,
             // Rent
             "rent": .rent,
+            "mortgage": .rent,
             // Default catch-all for other merchants
             "walmart": .other,
             "target": .other,

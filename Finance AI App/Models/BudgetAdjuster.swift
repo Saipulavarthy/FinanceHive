@@ -286,6 +286,8 @@ class BudgetAdjuster: ObservableObject {
             case .groceries: priorityMultiplier = 0.7
             case .entertainment, .other: priorityMultiplier = 1.2 // Discretionary - adjust more
             case .transportation: priorityMultiplier = 0.8
+            case .subscriptions: priorityMultiplier = 1.0 // Subscriptions - moderate adjustment
+            case .insurance: priorityMultiplier = 0.6 // Insurance - less adjustment
             }
             
             let suggestedAdjustment = budget.amount * adjustmentFactor * priorityMultiplier
